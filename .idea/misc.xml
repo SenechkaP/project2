@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Black">
+    <option name="enabledOnReformat" value="true" />
+    <option name="sdkUUID" value="11af4bfb-21d3-48ad-8340-ea4259c8d1c3" />
+  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.11 (flsk_project)" project-jdk-type="Python SDK" />
+  <component name="PyCharmProfessionalAdvertiser">
+    <option name="shown" value="true" />
+  </component>
+</project>
