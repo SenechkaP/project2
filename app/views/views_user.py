@@ -1,4 +1,5 @@
-from app import app, USERS, POSTS, models
+from app import app, USERS
+from app.user import User
 from flask import request, Response, send_file
 from http import HTTPStatus
 import matplotlib.pyplot as plt
@@ -6,11 +7,6 @@ import matplotlib
 import json
 
 matplotlib.use("Agg")
-
-
-@app.route("/")
-def index():
-    return "<h1> Hello <h1>"
 
 
 @app.post("/users/create")
@@ -21,10 +17,10 @@ def create_user():
     last_name = data["last_name"]
     email = data["email"]
 
-    if not models.User.is_valid_email(email):
+    if not User.is_valid_email(email):
         return Response(status=HTTPStatus.BAD_REQUEST)
 
-    user = models.User(first_name, last_name, email, user_id)
+    user = User(first_name, last_name, email, user_id)
     USERS.append(user)
     response = Response(
         json.dumps(
@@ -63,70 +59,6 @@ def get_user(user_id):
     return response
 
 
-@app.post("/posts/create")
-def create_post():
-    data = request.json
-    post_id = len(POSTS)
-    author_id = data["author_id"]
-    text = data["text"]
-
-    if author_id < 0 or author_id >= len(USERS):
-        return Response(status=HTTPStatus.BAD_REQUEST)
-
-    post = models.Post(post_id, author_id, text)
-    USERS[author_id].posts.append(post)
-    POSTS.append(post)
-    response = Response(
-        json.dumps(
-            {
-                "id": post.post_id,
-                "author_id": post.author_id,
-                "text": post.text,
-                "reactions": post.reactions,
-            }
-        ),
-        HTTPStatus.OK,
-        mimetype="application/json",
-    )
-    return response
-
-
-@app.get("/posts/<int:post_id>")
-def get_post(post_id):
-    if post_id < 0 or post_id >= len(POSTS):
-        return Response(status=HTTPStatus.BAD_REQUEST)
-
-    post = POSTS[post_id]
-    response = Response(
-        json.dumps(
-            {
-                "id": post.post_id,
-                "author_id": post.author_id,
-                "text": post.text,
-                "reactions": post.reactions,
-            }
-        ),
-        HTTPStatus.OK,
-        mimetype="application/json",
-    )
-    return response
-
-
-@app.post("/posts/<int:post_id>/reaction")
-def post_reaction(post_id):
-    if post_id < 0 or post_id >= len(POSTS):
-        return Response(status=HTTPStatus.BAD_REQUEST)
-
-    data = request.json
-    user_id = data["user_id"]
-    reaction = data["reaction"]
-
-    USERS[user_id].total_reactions += 1
-    POSTS[post_id].reactions.append(reaction)
-
-    return Response(status=HTTPStatus.OK)
-
-
 @app.get("/users/<int:user_id>/posts")
 def get_user_posts(user_id):
     if user_id < 0 or user_id >= len(USERS):
@@ -145,7 +77,7 @@ def get_user_posts(user_id):
         return Response(status=HTTPStatus.BAD_REQUEST)
 
     response = Response(
-        json.dumps({"posts": [post.convert_to_dict() for post in user_sorted_posts]}),
+        json.dumps({"posts": [post.to_dict() for post in user_sorted_posts]}),
         HTTPStatus.OK,
         mimetype="application/json",
     )
@@ -166,18 +98,18 @@ def get_leaderboard():
             return Response(status=HTTPStatus.BAD_REQUEST)
 
         response = Response(
-            json.dumps(
-                {"users": [user.convert_to_dict() for user in users_leaderboard]}
-            ),
+            json.dumps({"users": [user.to_dict() for user in users_leaderboard]}),
             HTTPStatus.OK,
             mimetype="application/json",
         )
         return response
     elif data["type"] == "graph":
-        x = [user.user_id for user in USERS]
+        x = [f"{user.first_name}\n{user.last_name}" for user in USERS]
         y = [user.total_reactions for user in USERS]
-        plt.plot(x, y)
+        plt.bar(x, y)
+        plt.title("Leaderboard")
+        plt.ylabel("reactions")
         plt.savefig("app/graph.png")
-        return send_file("graph.png", mimetype="image/gif")
+        return send_file("graph.png")
     else:
         return Response(status=HTTPStatus.BAD_REQUEST)
