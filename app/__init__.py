@@ -7,3 +7,4 @@ POSTS = []
 from app import user
 from app import post
 from app import views
+from app import tests

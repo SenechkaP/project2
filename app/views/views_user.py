@@ -45,7 +45,7 @@ def get_user(user_id):
     response = Response(
         json.dumps(
             {
-                "id": user.uid,
+                "id": user.user_id,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "email": user.email,
