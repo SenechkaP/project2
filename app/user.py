@@ -1,4 +1,5 @@
 import re
+from app import USERS
 
 
 class User:
@@ -9,11 +10,16 @@ class User:
         self.user_id = user_id
         self.total_reactions = 0
         self.posts = []
+        self.status = "created"
 
     @staticmethod
     def is_valid_email(email):
         email_validate_pattern = r"^\S+@\S+\.\S+$"
         return re.match(email_validate_pattern, email)
+
+    @staticmethod
+    def is_valid_user(user_id):
+        return 0 <= user_id < len(USERS) and USERS[user_id].status != "deleted"
 
     def to_dict(self):
         return {

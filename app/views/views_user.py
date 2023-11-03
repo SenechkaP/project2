@@ -41,6 +41,9 @@ def create_user():
 
 @app.get("/users/<int:user_id>")
 def get_user(user_id):
+    if not User.is_valid_user(user_id):
+        return Response(status=HTTPStatus.BAD_REQUEST)
+
     user = USERS[user_id]
     response = Response(
         json.dumps(
@@ -59,9 +62,34 @@ def get_user(user_id):
     return response
 
 
+@app.delete("/users/<int:user_id>")
+def delete_user(user_id):
+    if not User.is_valid_user(user_id):
+        return Response(status=HTTPStatus.BAD_REQUEST)
+
+    user = USERS[user_id]
+    USERS[user_id].status = "deleted"
+    response = Response(
+        json.dumps(
+            {
+                "id": user.user_id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email": user.email,
+                "total_reactions": user.total_reactions,
+                "posts": user.posts,
+                "status": "deleted",
+            }
+        ),
+        HTTPStatus.OK,
+        mimetype="application/json",
+    )
+    return response
+
+
 @app.get("/users/<int:user_id>/posts")
 def get_user_posts(user_id):
-    if user_id < 0 or user_id >= len(USERS):
+    if not User.is_valid_user(user_id):
         return Response(status=HTTPStatus.BAD_REQUEST)
 
     user_posts = USERS[user_id].posts
@@ -98,7 +126,15 @@ def get_leaderboard():
             return Response(status=HTTPStatus.BAD_REQUEST)
 
         response = Response(
-            json.dumps({"users": [user.to_dict() for user in users_leaderboard]}),
+            json.dumps(
+                {
+                    "users": [
+                        user.to_dict()
+                        for user in users_leaderboard
+                        if User.is_valid_user(user.user_id)
+                    ]
+                }
+            ),
             HTTPStatus.OK,
             mimetype="application/json",
         )
