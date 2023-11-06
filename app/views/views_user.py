@@ -30,7 +30,7 @@ def create_user():
                 "last_name": user.last_name,
                 "email": user.email,
                 "total_reactions": user.total_reactions,
-                "posts": user.posts,
+                "posts": [post.to_dict() for post in user.posts],
             }
         ),
         HTTPStatus.OK,
@@ -53,7 +53,7 @@ def get_user(user_id):
                 "last_name": user.last_name,
                 "email": user.email,
                 "total_reactions": user.total_reactions,
-                "posts": user.posts,
+                "posts": [post.to_dict() for post in user.posts],
             }
         ),
         HTTPStatus.OK,
@@ -77,7 +77,7 @@ def delete_user(user_id):
                 "last_name": user.last_name,
                 "email": user.email,
                 "total_reactions": user.total_reactions,
-                "posts": user.posts,
+                "posts": [post.to_dict() for post in user.posts],
                 "status": "deleted",
             }
         ),

@@ -1,5 +1,6 @@
 from app import app, USERS, POSTS
 from app.post import Post
+from app.user import User
 from flask import request, Response
 from http import HTTPStatus
 import json
@@ -9,10 +10,10 @@ import json
 def create_post():
     data = request.json
     post_id = len(POSTS)
-    author_id = data["author_id"]
+    author_id = int(data["author_id"])
     text = data["text"]
 
-    if author_id < 0 or author_id >= len(USERS):
+    if not User.is_valid_user(author_id):
         return Response(status=HTTPStatus.BAD_REQUEST)
 
     post = Post(post_id, author_id, text)
@@ -35,7 +36,7 @@ def create_post():
 
 @app.get("/posts/<int:post_id>")
 def get_post(post_id):
-    if post_id < 0 or post_id >= len(POSTS):
+    if not Post.is_valid_post(post_id):
         return Response(status=HTTPStatus.BAD_REQUEST)
 
     post = POSTS[post_id]
@@ -54,9 +55,32 @@ def get_post(post_id):
     return response
 
 
+@app.delete("/posts/<int:post_id>")
+def delete_post(post_id):
+    if not Post.is_valid_post(post_id):
+        return Response(status=HTTPStatus.BAD_REQUEST)
+
+    post = POSTS[post_id]
+    POSTS[post_id].status = "deleted"
+    response = Response(
+        json.dumps(
+            {
+                "id": post.post_id,
+                "author_id": post.author_id,
+                "text": post.text,
+                "reactions": post.reactions,
+                "status": "deleted",
+            }
+        ),
+        HTTPStatus.OK,
+        mimetype="application/json",
+    )
+    return response
+
+
 @app.post("/posts/<int:post_id>/reaction")
 def post_reaction(post_id):
-    if post_id < 0 or post_id >= len(POSTS):
+    if not Post.is_valid_post(post_id):
         return Response(status=HTTPStatus.BAD_REQUEST)
 
     data = request.json
