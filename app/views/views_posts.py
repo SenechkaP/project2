@@ -84,8 +84,11 @@ def post_reaction(post_id):
         return Response(status=HTTPStatus.BAD_REQUEST)
 
     data = request.json
-    user_id = data["user_id"]
+    user_id = int(data["user_id"])
     reaction = data["reaction"]
+
+    if not User.is_valid_user(user_id):
+        return Response(status=HTTPStatus.BAD_REQUEST)
 
     USERS[user_id].total_reactions += 1
     POSTS[post_id].reactions.append(reaction)

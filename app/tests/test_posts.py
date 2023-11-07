@@ -51,3 +51,40 @@ def test_create_post():
     assert delete_post_response.json()["text"] == post_payload["text"]
     assert delete_post_response.json()["status"] == "deleted"
     assert isinstance(delete_post_response.json()["reactions"], list)
+
+
+def test_post_reaction():
+    user_payload = create_user_payload()
+    create_user_response = requests.post(f"{ENDPOINT}/users/create", json=user_payload)
+    user_data = create_user_response.json()
+    post_payload = {
+        "author_id": f"{user_data['id']}",
+        "text": "wow",
+    }
+    create_post_response = requests.post(f"{ENDPOINT}/posts/create", json=post_payload)
+    post_data = create_post_response.json()
+
+    assert create_post_response.status_code == HTTPStatus.OK
+
+    reaction_payload = {
+        "user_id": f"{user_data['id']}",
+        "reaction": "heart",
+    }
+
+    create_reaction_response = requests.post(
+        f"{ENDPOINT}/posts/{post_data['id']}/reaction", json=reaction_payload
+    )
+
+    get_post_response = requests.get(f"{ENDPOINT}/posts/{post_data['id']}")
+
+    assert get_post_response.status_code == HTTPStatus.OK
+    assert create_reaction_response.status_code == HTTPStatus.OK
+    assert reaction_payload["reaction"] in get_post_response.json()["reactions"]
+
+    delete_user_response = requests.delete(f"{ENDPOINT}/users/{user_data['id']}")
+
+    assert delete_user_response.status_code == HTTPStatus.OK
+
+    delete_post_response = requests.delete(f"{ENDPOINT}/posts/{post_data['id']}")
+
+    assert delete_post_response.status_code == HTTPStatus.OK
